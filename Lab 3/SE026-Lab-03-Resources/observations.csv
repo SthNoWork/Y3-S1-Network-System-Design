@@ -1,0 +1,7 @@
+Test,Input or command,Actual result,What this supports,What it does not prove
+HTTP index,,,,
+HTTP missing resource,,,,
+Stopped server,,,,
+Restarted server,,,,
+DNS lookup,,,,
+Public Moodle page,,,,
