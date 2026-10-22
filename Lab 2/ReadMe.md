@@ -1,0 +1,170 @@
+# Lab 2: Protocol Layers and Security Design
+**Network System Design | SE026 | 2026-27**
+**Name:** LOR HENG RITH
+
+---
+
+## 1. Record Your Observation
+
+| Item | Value |
+|---|---|
+| OS / Wireshark version | 4.6.9
+| Capture filename | `Week2-Teaching-Trace.pcap` |
+| Unfiltered packet count | **12** |
+
+---
+
+## 2. DNS and Protocol Fields
+
+Filter used: `dns`
+
+| Observation | Evidence and explanation |
+|---|---|
+| DNS query / response frame numbers | Query = **frame 1**, Response = **frame 2** |
+| Query name and record type | `data.example.test`, type **A** (IPv4 address record) |
+| Query source / destination IPv4 | Query: `192.0.2.10` → `192.0.2.53`. Response: `192.0.2.53` → `192.0.2.10` |
+| UDP source / destination port | Query: `53000` → `53`. Response: `53` → `53000` |
+| Returned address | `198.51.100.20` (TTL 60 s) |
+
+Extra evidence: both frames share DNS transaction ID `0x1234`, which is how the response is matched to the query. Frame 1 has flags `0x0100` (standard query, recursion desired). Frame 2 has `0x8180` (response, recursion available, no error).
+
+**Explain the name-lookup protocol, the protocol carrying this exchange and the layer supplying IPv4 delivery.**
+
+- **DNS** is the name-lookup protocol (application layer). It maps the name `data.example.test` to an IPv4 address.
+- **UDP** (transport layer) carries the DNS messages. The client uses an ephemeral port (53000) and the server listens on well-known port 53.
+- **IPv4** (network layer) supplies host-to-host delivery between `192.0.2.10` and `192.0.2.53`.
+
+**Does this trace prove that every DNS exchange uses UDP? Explain the evidence limit.**
+
+No. The trace contains only one DNS exchange (frames 1–2), so it shows that *this* exchange used UDP, not that all DNS does. DNS can also run over TCP (for example when a response is too large for UDP, for zone transfers, or with DNS-over-TLS). This capture has no such traffic, so it cannot rule it out. It is a single sample from one observation point.
+
+---
+
+## 3. HTTP Request and Encapsulation
+
+Filter used: `http`
+
+| Layer evidence | Your field and meaning |
+|---|---|
+| Ethernet source / destination MAC | Request (frame 6): src `02:00:00:00:00:10` (client) → dst `02:00:00:00:00:01` (next hop, i.e. the gateway) |
+| IPv4 source / destination address | `192.0.2.10` (client) → `198.51.100.20` (web server) |
+| TCP source / destination port | `51000` (ephemeral client port) → `80` (HTTP) |
+| HTTP method / Host / resource | `GET` / `data.example.test` / `/dataset.json` (HTTP/1.1) |
+| Response frame / status | **Frame 8**, `200 OK` (`Content-Type: application/json`, `Content-Length: 38`) |
+
+**Follow > TCP Stream: which text is visible and which layers carry it.**
+
+Request (frame 6, client → server):
+```
+GET /dataset.json HTTP/1.1
+Host: data.example.test
+Connection: close
+```
+
+Response (frame 8, server → client):
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 38
+Connection: close
+
+{"dataset":"classroom_demo","rows":2}
+```
+
+All of this is readable as plain text because it is **plain HTTP with no encryption**. The text is the application-layer payload of a TCP segment. That segment sits in an IPv4 packet, which sits in an Ethernet frame. Anyone who can observe the link can read the method, host, path, headers and body.
+
+Supporting TCP frames in the same stream:
+
+| Frames | Purpose |
+|---|---|
+| 3, 4, 5 | Three-way handshake (SYN, SYN-ACK, ACK) |
+| 6 | HTTP request (PSH, ACK) |
+| 7 | Server ACK of the request |
+| 8 | HTTP response (PSH, ACK) |
+| 9 | Client ACK of the response |
+| 10, 11, 12 | Connection close (FIN-ACK, FIN-ACK, ACK) |
+
+Note: the HTTP request is in frame 6 and the response in frame 8. The TCP handshake and close frames carry no HTTP text.
+
+---
+
+## 4. Forwarding and Trust Boundaries
+
+### Design diagram
+
+```
+                         +-------------------+
+                         |     INTERNET      |
+                         +---------+---------+
+                                   |
+                         +---------+---------+
+                         |  Gateway / Router |
+                         |  + Firewall (ACL) |
+                         +----+---------+----+
+                              |         |
+          VLAN 10 (Student)   |         |   VLAN 20 (Finance)
+     +------------------------+         +------------------------+
+     |                                                           |
++----+-----------+                                      +--------+-------+
+| Access Switch A|                                      | Access Switch B|
++----+-----------+                                      +--------+-------+
+     |                                                           |
+[Student Lab PCs]                                         [Finance PCs]
+ TRUST: STUDENT                                           TRUST: FINANCE
+
+                 VLAN 30 (Management / Server zone)
+                 +-----------------------------------+
+                 |  Payroll Service (server)         |
+                 |  Switch/AP management interfaces  |
+                 |  TRUST: MANAGEMENT                |
+                 +-----------------------------------+
+                      attached to the Gateway
+
+Permitted paths:
+  [Student]  ---> Gateway ---> Internet          (ALLOW)
+  [Finance]  ---> Gateway ---> Internet          (ALLOW)
+  [Finance]  ---> Gateway ---> Payroll service   (ALLOW)
+
+Restricted path:
+  [Student]  -X-> Gateway -X-> Payroll service   (DENY)
+```
+
+Trust groups: **Student** (VLAN 10), **Finance** (VLAN 20), **Management** (VLAN 30: payroll service and device management).
+
+### Requirement / threat table
+
+| Requirement / threat | Proposed control | Verification / limit |
+|---|---|---|
+| Only finance users may reach the payroll service; students must be blocked | Separate VLANs per trust group plus a firewall/ACL rule at the gateway: permit Finance subnet → Payroll, deny Student subnet → Payroll (default deny) | From a student PC, try to connect to the payroll service (ping, TCP connect on its port) and confirm it fails. Repeat from a finance PC and confirm it works. Check the firewall hit counters/logs. **Limit:** tests only the paths tried; also needs a review of rule order and of any other route to the server. |
+| Both groups need Internet access | Allow outbound Internet from Student and Finance VLANs through the gateway (with NAT) | Browse or ping an external address from both VLANs. **Limit:** shows reachability, not that the allowed traffic is safe. |
+| Confidentiality threat: plain HTTP exposes content (frames 6 and 8 are readable by anyone on the path) | Use **HTTPS (TLS)** for web and payroll traffic, and disable or redirect plain HTTP | Capture again in Wireshark and confirm the HTTP text is no longer readable (shows TLS records instead). **Limit:** IP addresses, ports, and often the server name (SNI) and traffic volume remain visible; TLS does not hide metadata. |
+
+### Forwarding explanation
+
+When a packet is forwarded by a router (with no NAT, tunnel or proxy):
+
+- **The Ethernet header changes on every link.** The router strips the incoming frame, decrements the IP TTL, looks up the next hop, and builds a new frame with a new source MAC (the router's outgoing interface) and a new destination MAC (the next hop or the final host on that link).
+- **The IP source and destination addresses stay the same** end to end (here `192.0.2.10` → `198.51.100.20`).
+
+In the trace, frame 6 on the client's link has dst MAC `02:00:00:00:00:01`, which is the gateway and not the web server. The server's identity is carried only in the IP destination `198.51.100.20`.
+
+**Conceptual prediction (not in the trace) for the next link:** the same IP packet would appear in a new Ethernet frame with src MAC = the router's outgoing interface and dst MAC = the next-hop router (or the server). IP src/dst would still be `192.0.2.10` → `198.51.100.20`, with TTL reduced by 1.
+
+---
+
+## 5. Reflection
+
+**1. Explain how an HTTP message fits inside TCP, IP and Ethernet.**
+The HTTP request or response is the application data. TCP wraps it in a segment with source/destination ports and sequence numbers (here 51000 → 80). IP wraps the segment in a packet with source/destination IP addresses (192.0.2.10 → 198.51.100.20). Ethernet wraps the packet in a frame with source/destination MAC addresses for the local link. Each layer adds its own header, and the receiver removes them in reverse order.
+
+**2. Why can the destination MAC identify a different device from the remote server named by the IP destination?**
+The MAC address is only valid on the local link and identifies the *next hop*, here the gateway (`02:00:00:00:00:01`). The IP destination names the final remote server (`198.51.100.20`), which is not on the same link. The router rewrites the MAC at each hop while the IP destination stays unchanged.
+
+**3. Which security goal does your proposed control address?**
+VLAN separation plus the ACL/firewall rule addresses **access control / authorization** (and limits who can reach payroll, which also protects confidentiality and integrity of payroll data). HTTPS/TLS addresses **confidentiality** (and integrity) of data in transit.
+
+**4. What evidence is still needed before implementing the design?**
+- Real traffic measurements (who talks to what, and on which ports), since this trace is only a teaching example and not campus traffic.
+- The actual building layout, switch/VLAN capabilities and gateway/firewall model.
+- A confirmed list of users and devices per trust group, and the payroll service's address and ports.
+- Whether any other services or legacy plain-HTTP apps depend on current access, plus a rollback and test plan.
