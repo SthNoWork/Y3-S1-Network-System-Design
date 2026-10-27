@@ -1,0 +1,6 @@
+Activity,Input or baseline,Expected result,Actual result,Interpretation or limit,Verification
+TCP exchange,py echo.py tcp client "hello class",Target 12000 and echo reply,"Target: 12000, Local: 49848, Reply: hello class",TCP establishes connection and echoes message,Terminal B output verified
+TCP change message,py echo.py tcp client "Mixed CASE 123",Target 12000 and echo reply,"Target: 12000, Local: 49864, Reply: Mixed CASE 123",OS allocates new ephemeral client port,Terminal B output verified
+TCP stopped server,py echo.py tcp client after server Ctrl+C,Connection failure or timeout,TimeoutError: timed out,Client socket timed out waiting for server connection,Terminal B error verified
+UDP exchange,py echo.py udp client "hello class",Target 12000 and echo reply,"Target: 12000, Local: 54378, Reply: hello class",UDP datagram sent and returned via loopback,Terminal B output verified
+UDP absent server,py echo.py udp client after server Ctrl+C,Timeout or connection reset,ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host,Windows receives ICMP port unreachable on loopback,Terminal B error verified
