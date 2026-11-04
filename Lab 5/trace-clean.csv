@@ -1,0 +1,13 @@
+step,time,actor,event,sequence,payload,detail,delivered_count
+1,0,sender,send_DATA,0,ALPHA,Start/restart the fixed logical timer,0
+2,1,receiver,receive_DATA,0,ALPHA,Expected sequence before processing: 0,0
+3,1,receiver,deliver,0,ALPHA,Deliver once; next expected sequence: 1,1
+4,1,receiver,send_ACK,0,,ACK identifies this DATA label,1
+5,2,sender,receive_ACK,0,,Current outstanding sequence: 0,1
+6,2,sender,accept_ACK,0,,Advance to the next application message,1
+7,2,sender,send_DATA,1,BETA,Start/restart the fixed logical timer,1
+8,3,receiver,receive_DATA,1,BETA,Expected sequence before processing: 1,1
+9,3,receiver,deliver,1,BETA,Deliver once; next expected sequence: 0,2
+10,3,receiver,send_ACK,1,,ACK identifies this DATA label,2
+11,4,sender,receive_ACK,1,,Current outstanding sequence: 1,2
+12,4,sender,accept_ACK,1,,Advance to the next application message,2

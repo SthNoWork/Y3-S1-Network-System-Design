@@ -1,0 +1,22 @@
+step,time,actor,event,sequence,payload,detail,delivered_count
+1,0,sender,send_DATA,0,ALPHA,Start/restart the fixed logical timer,0
+2,0,channel,drop_DATA,0,ALPHA,First DATA0 is lost in this case,0
+3,5,sender,timeout,0,ALPHA,No matching ACK received before the deadline,0
+4,5,sender,send_DATA,0,ALPHA,Start/restart the fixed logical timer,0
+5,6,receiver,receive_DATA,0,ALPHA,Expected sequence before processing: 0,0
+6,6,receiver,deliver,0,ALPHA,Deliver once; next expected sequence: 1,1
+7,6,receiver,send_ACK,0,,ACK identifies this DATA label,1
+8,6,channel,drop_ACK,0,,First ACK0 is lost in this case,1
+9,10,sender,timeout,0,ALPHA,No matching ACK received before the deadline,1
+10,10,sender,send_DATA,0,ALPHA,Start/restart the fixed logical timer,1
+11,11,receiver,receive_DATA,0,ALPHA,Expected sequence before processing: 1,1
+12,11,receiver,suppress_duplicate,0,ALPHA,Keep the application delivery list unchanged,1
+13,11,receiver,send_ACK,0,,ACK identifies this DATA label,1
+14,12,sender,receive_ACK,0,,Current outstanding sequence: 0,1
+15,12,sender,accept_ACK,0,,Advance to the next application message,1
+16,12,sender,send_DATA,1,BETA,Start/restart the fixed logical timer,1
+17,13,receiver,receive_DATA,1,BETA,Expected sequence before processing: 1,1
+18,13,receiver,deliver,1,BETA,Deliver once; next expected sequence: 0,2
+19,13,receiver,send_ACK,1,,ACK identifies this DATA label,2
+20,14,sender,receive_ACK,1,,Current outstanding sequence: 1,2
+21,14,sender,accept_ACK,1,,Advance to the next application message,2

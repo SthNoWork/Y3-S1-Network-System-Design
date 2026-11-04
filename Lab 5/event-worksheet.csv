@@ -1,0 +1,10 @@
+row,Sender state AFTER row,Receiver expects AFTER row,New application delivery this row,Total deliveries so far,Reason and next action
+1,waiting for ACK0,expects 0,none,0,DATA0 lost in channel; sender timer running
+2,waiting for ACK0,expects 0,none,0,Sender timeout; retransmits DATA0 and restarts timer
+3,waiting for ACK0,expects 1,ALPHA,1,DATA0 received; delivers ALPHA and sends ACK0
+4,waiting for ACK0,expects 1,none,1,ACK0 lost in channel; sender timer running
+5,waiting for ACK0,expects 1,none,1,Sender timeout; retransmits DATA0 and restarts timer
+6,waiting for ACK0,expects 1,none,1,Duplicate DATA0 received; suppresses delivery and re-sends ACK0
+7,waiting for ACK1,expects 1,none,1,ACK0 arrives; sender advances and sends DATA1
+8,waiting for ACK1,expects 0,BETA,2,DATA1 received; delivers BETA and sends ACK1
+9,ready for next message,expects 0,none,2,ACK1 arrives; transfer complete

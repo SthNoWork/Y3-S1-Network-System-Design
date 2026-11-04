@@ -1,0 +1,3 @@
+Transport,Server endpoint,Actual client endpoint,Message sent,Reply received,What this verifies,What remains untested
+TCP,"('127.0.0.1', 12000)","('127.0.0.1', 63242)",design test,design test,TCP loopback connection establishment and bidirectional byte stream echo,Path-wide loss and packet retransmission
+UDP,"('127.0.0.1', 12000)","('0.0.0.0', 49999)",design test,design test,UDP connectionless datagram send and receive loopback,Packet loss and duplicate delivery detection

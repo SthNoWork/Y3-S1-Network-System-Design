@@ -1,0 +1,6 @@
+Case,DATA transmissions,Timeouts,Duplicate DATA,Ignored ACKs,Application delivery list,Trace evidence and explanation
+no-loss,2,0,0,0,"['ALPHA', 'BETA']",Steps 1-12: Both DATA0 and DATA1 delivered cleanly on first transmission without timeout
+data-loss,3,1,0,0,"['ALPHA', 'BETA']",Steps 1-15: Initial DATA0 dropped at t=0; timeout at t=5 retransmits DATA0; delivered at t=6
+ack-loss,3,1,1,0,"['ALPHA', 'BETA']",Steps 1-16: First ACK0 dropped at t=1; timeout at t=5 causes duplicate DATA0 at t=6; ACK0 re-sent
+combined-loss,4,2,1,0,"['ALPHA', 'BETA']",Steps 1-21: DATA0 dropped at t=0; retry delivers ALPHA at t=6 but ACK0 dropped; retry at t=11 duplicate suppressed; DATA1 delivered at t=13
+delayed-ack,3,1,1,1,"['ALPHA', 'BETA']",Steps 1-20: ACK0 delayed 7 units (arrives t=8); sender timeout at t=5 retransmits; delayed ACK0 ignored at t=8 after advance

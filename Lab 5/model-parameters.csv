@@ -1,0 +1,5 @@
+parameter,value,unit
+DATA_length,8000,bits
+link_rate,10000000,bits per second
+case_A_RTT,0.04,seconds round-trip propagation
+case_B_RTT,0.004,seconds round-trip propagation

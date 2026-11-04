@@ -1,0 +1,10 @@
+row,Observed synthetic event
+1,DATA0 sent; the channel loses it
+2,Sender timer expires without a matching ACK
+3,Repeated DATA0 carrying ALPHA arrives at receiver
+4,Receiver sends ACK0; the channel loses it
+5,Sender timer expires without a matching ACK
+6,Repeated DATA0 carrying ALPHA arrives at receiver
+7,ACK0 arrives at sender
+8,DATA1 carrying BETA arrives at receiver
+9,ACK1 arrives at sender
