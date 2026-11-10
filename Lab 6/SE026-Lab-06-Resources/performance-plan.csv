@@ -1,0 +1,12 @@
+Item,Your design
+File identity and bytes,"8 MB test payload (8,000,000 bytes, test_file_8mb.bin)"
+Ideal lower bound and assumptions,"6.40 s ((8,000,000 bytes * 8 bits/byte) / 10,000,000 bit/s); assumes bottleneck carries file bits continuously without protocol overhead, packet loss, or contention"
+Source destination and path,Server A to Client B over dedicated 10 Mb/s bottleneck link
+Concurrent clients and traffic,1 client with zero background or competing traffic
+Timer start and stop,Start immediately before issuing transfer request; stop immediately after final byte is written to local disk
+File verification,Compute SHA-256 hash of written file and compare against pre-computed server hash
+Metric and agreed target,Elapsed transfer time <= 8.5 s (useful throughput >= 7.53 Mb/s) on verified transfers
+Trial count and success rule,5 consecutive trials; 100% must verify hash and complete within <= 8.5 s
+Conditions to hold fixed,"File content/size (8 MB), bottleneck bandwidth (10 Mb/s), MTU (1500 B), TCP stack configuration, client/server hardware"
+Evidence and invalid trial handling,Log packet capture (pcap), wall-clock timestamps, and SHA-256 result; hash failure or incomplete transfer logged as FAIL and invalidates run
+Person who approves target,Network System Design Lead / Module Instructor

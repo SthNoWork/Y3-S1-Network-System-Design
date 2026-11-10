@@ -1,0 +1,4 @@
+Trace row,Direction,Flags,Sequence,Valid ACK or N/A,What the ACK covers,Next sequence for sender,Reason
+1,A_to_B,SYN,1000,N/A,None (initial SYN),1001,Initial connection request; SYN consumes 1 sequence number
+2,B_to_A,SYN_ACK,5000,1001,Acknowledges A's SYN (seq 1000),5001,B responds with SYN and acknowledges A's SYN; consumes 1 sequence number
+3,A_to_B,ACK,1001,5001,Acknowledges B's SYN (seq 5000),1001,Handshake completion; pure ACK consumes 0 sequence numbers

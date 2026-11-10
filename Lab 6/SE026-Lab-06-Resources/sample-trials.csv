@@ -1,0 +1,4 @@
+Trial,Expected file bytes,Elapsed seconds,Hash matches expected
+A,8000000,8,yes
+B,8000000,10,yes
+C,8000000,7,no

@@ -1,0 +1,11 @@
+synthetic_row,time_s,direction,flags,sequence,acknowledgement,payload_bytes
+1,0.000,A_to_B,SYN,1000,0,0
+2,0.020,B_to_A,SYN_ACK,5000,1001,0
+3,0.030,A_to_B,ACK,1001,5001,0
+4,0.040,A_to_B,ACK,1001,5001,500
+5,0.060,B_to_A,ACK,5001,1501,0
+6,0.070,A_to_B,ACK,1501,5001,500
+7,0.080,A_to_B,ACK,2001,5001,500
+8,0.100,B_to_A,ACK,5001,1501,0
+9,0.300,A_to_B,ACK,1501,5001,500
+10,0.320,B_to_A,ACK,5001,2501,0

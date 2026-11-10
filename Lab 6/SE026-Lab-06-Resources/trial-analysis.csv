@@ -1,0 +1,4 @@
+Trial,Eligible for useful-rate calculation,Useful rate Mb/s or N/A,Meets 9 s and verification rule,Reason
+A,Yes,8.00,Yes,Verified hash and elapsed time (8 s) meets the <= 9 s target
+B,Yes,6.40,No,Verified hash but elapsed time (10 s) exceeds the 9 s target
+C,No,N/A,No,Corrupted or incomplete file; hash verification failed
